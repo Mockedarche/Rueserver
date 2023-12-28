@@ -9,7 +9,7 @@ Goals -
     Currently the thinking will be pi zero w's with temperature, humidity, etc data submitting their data so I can see
     fluctuations throughout my house. Eventually i'd like to make my own humidifiers, zone cooling, etc.
     
-Pre-Alpha v001
+Pre-Alpha v002
 Very basic Server Client relationship right now allows clients to connect (note everything is local host right now), authenticate, create account, check if logged in,
 and logout. Current bcrypt is used client side but will eventually be a server side thing as well
 
@@ -23,14 +23,13 @@ Then both will hash the hashed password with that salt giving a unique hash that
 Auto logout - After x period of inactivity a client should be logged out. This will ensure after months of running my authenticated_users list
 doesn't get too long. Additionally it works as a privacy measure. 
 
-Tie authenticated users to a IP address - This will prevent a obvious flaw right now of bad actors posing as other clients. 
-Another way could be to have a public key and private key relationship such that no bad actor could act like a real client.
-
 """
 
 import mysql.connector
 import socket
 import bcrypt
+import threading
+import time 
 
 # dictionary for login information and a list to keep track of users that have been authenticated
 login_info = dict()
@@ -49,30 +48,33 @@ def read_in_logins():
 def authenticate_login(username, client_socket, client_address):
     print("Attempting to authenticate user")
     
-    client_socket.sendall(login_info[username][1])
-    print(login_info[username][1])
+    if username in login_info:
+        client_socket.sendall(login_info[username][1])
     
-    # get backed if hashed worked and the hashed password
-    message = client_socket.recv(1024).decode('ascii').split()
+        # get backed if hashed worked and the hashed password
+        message = client_socket.recv(1024).decode('ascii').split()
     
-    if message[0] == "hashed":
-        if str(message[1]) == login_info[username][0]:
-            print("Successfully authenticated user: " + str(username))
-            new_user = {"username": username, "ip_address": client_address}
-            print(new_user)
-            authenticated_users.append(new_user)
-            return "Success"
+        if message[0] == "hashed":
+            if str(message[1]) == login_info[username][0]:
+                print("Successfully authenticated user: " + str(username))
+                new_user = {"username": username, "ip_address": client_address[0]}
+                print(new_user)
+                authenticated_users.append(new_user)
+                return "Success"
+            else:
+                print("Failed to authenticate user: " + str(username))
+                return "Failed"
         else:
-            print("Failed to authenticate user: " + str(username))
             return "Failed"
     else:
+        print("A user who hasn't been created attempted to authenticate with username: " + username)
         return "Failed"
             
     
 # is_user_authenticated checks if the user has been logged in
 def is_user_authenticated(username, client_address):
     for user in authenticated_users:
-        if user['username'] == username and user['ip_address'] == client_address:
+        if user['username'] == username and user['ip_address'] == client_address[0]:
             print(user)
             print("User: " + str(username) + " is loggged in")
             return "Success"
@@ -114,13 +116,17 @@ def create_user(username, client_socket):
 
 # logout_user removes the user from the authenticated_users
 # NOTE eventually gonna add a timeout function so if a client hasn't messaged in awhile it's logged out
-def logout_user(username):
+def logout_user(username, client_address):
     print("Attempting to logout user: " + str(username))
-    if username in authenticated_users:
-        print("Successfully logged out user: " + str(username))
-        authenticated_users.remove(username)
-    else:
-        print("User wasn't logged in")
+    for user in authenticated_users:
+        if user['username'] == username and user['ip_address'] == client_address[0]:
+            print("Successfully logged out user: " + str(username))
+            authenticated_users.remove(user)
+            return "Success"
+ 
+ 
+    print("User wasn't logged in")
+    return "Failed"
 
 
 # for future use will be used so that clients can add stuff to the MYSQL server
@@ -155,6 +161,19 @@ def run_server():
     server_socket.listen(5)
     print("Server listening for incoming connections...")
 
+    # Function to execute continuously while listening for connections
+    def continuous_task():
+        while True:
+            # Perform the task you want to do continuously while listening
+            print("Performing continuous task...")
+            time.sleep(10)
+            
+            # Add your task logic here
+
+    # Start a thread for the continuous task
+    continuous_thread = threading.Thread(target=continuous_task)
+    continuous_thread.start()
+
     # while true keep running the server
     while True:
             # wait for a client to connect 
@@ -176,10 +195,15 @@ def run_server():
                 username = message[1]
                 response = create_user(username, client_socket)
                 client_socket.sendall(response.encode('ascii'))
-            # client_socket.close()
+            # checks if the given user is currently logged in
             elif command == "am_authenticated":
                 username = message[1]
                 response = is_user_authenticated(username, client_address)
+                client_socket.sendall(response.encode('ascii'))
+            # logout the given user if their logged in AND their ip address is the same as their logged in under
+            elif command == "logout":
+                username = message[1]
+                response = logout_user(username, client_address)
                 client_socket.sendall(response.encode('ascii'))
             # if a invalid command was sent print out what command was sent and the clients IP (for future debugging)
             else:

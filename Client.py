@@ -92,22 +92,24 @@ def authenticate_user(username, password):
         # recieve back the salt
         response = client_socket.recv(1024)
         
-        print(str(response))
+        # make sure we get valid return
+        if response.decode() != "Failed":
         
-        # attempt to hash the password with the salt
-        hashed_password = bcrypt.hashpw(password.encode(), response)
-        command = "hashed "
+            # attempt to hash the password with the salt
+            hashed_password = bcrypt.hashpw(password.encode(), response)
+            command = "hashed "
         
-        # get the hashed password read to be sent
-        message = f"{command} {hashed_password}"
+            # get the hashed password read to be sent
+            message = f"{command} {hashed_password}"
         
-        # send that we successfully hashed the password and the hashed password
-        client_socket.sendall(message.encode('ascii'))
+            # send that we successfully hashed the password and the hashed password
+            client_socket.sendall(message.encode('ascii'))
         
-        # recieve if the account was made or not
-        response = client_socket.recv(1024).decode('ascii')
-        print("Server response:", response)
-        
+            # recieve if the account was made or not
+            response = client_socket.recv(1024).decode('ascii')
+            print("Server response:", response)
+        else:
+            print("Server responded with failed")
 
     except ConnectionRefusedError:
         print("Connection to the server was refused")
