@@ -46,18 +46,21 @@ def read_in_logins():
             
 # authenticate_login checks the given password to what's on file
 # TODO add a challenege in order to prevent replay attacks
-def authenticate_login(username, client_socket):
+def authenticate_login(username, client_socket, client_address):
     print("Attempting to authenticate user")
     
     client_socket.sendall(login_info[username][1])
+    print(login_info[username][1])
     
     # get backed if hashed worked and the hashed password
     message = client_socket.recv(1024).decode('ascii').split()
     
     if message[0] == "hashed":
-        if str(message[1]) == str(login_info[username][0]):
+        if str(message[1]) == login_info[username][0]:
             print("Successfully authenticated user: " + str(username))
-            authenticated_users.append(username)
+            new_user = {"username": username, "ip_address": client_address}
+            print(new_user)
+            authenticated_users.append(new_user)
             return "Success"
         else:
             print("Failed to authenticate user: " + str(username))
@@ -67,13 +70,16 @@ def authenticate_login(username, client_socket):
             
     
 # is_user_authenticated checks if the user has been logged in
-def is_user_authenticated(username):
-    if username in authenticated_users:
-        print("User: " + str(username) + " is already loggged in")
-        return "Success"
-    else:
-        print("User: " + str(username) + " is NOT already loggged in")
-        return "Failed"
+def is_user_authenticated(username, client_address):
+    for user in authenticated_users:
+        if user['username'] == username and user['ip_address'] == client_address:
+            print(user)
+            print("User: " + str(username) + " is loggged in")
+            return "Success"
+    
+    
+    print("User: " + str(username) + " is NOT loggged in")
+    return "Failed"
 
 # create_user simple takes the given username and (should be hashed) password and adds them to our dictionary and list
 # TODO verify that the password has been correctly hashed
@@ -99,7 +105,7 @@ def create_user(username, client_socket):
             print("Successfully created user: " + str(username))
             login_info[username] = (message[1], salt)
             with open('definitely_not_logins.txt', 'a') as file:
-                file.write(str(username) + ":" + str(message[1]) + ":" + str(salt) + '\n')
+                file.write(str(username) + ":" + str(message[1]) + ":" + salt.decode() + '\n')
     
             return "Success"
             
@@ -163,7 +169,7 @@ def run_server():
             # see what commands where sent such as authenticate, create_account, etc
             if command == "authenticate":
                 username = message[1]
-                response = authenticate_login(username, client_socket)
+                response = authenticate_login(username, client_socket, client_address)
                 client_socket.sendall(response.encode('ascii'))
             # Add more conditions for other commands
             elif command == "create_account":
@@ -173,7 +179,7 @@ def run_server():
             # client_socket.close()
             elif command == "am_authenticated":
                 username = message[1]
-                response = is_user_authenticated(username)
+                response = is_user_authenticated(username, client_address)
                 client_socket.sendall(response.encode('ascii'))
             # if a invalid command was sent print out what command was sent and the clients IP (for future debugging)
             else:
