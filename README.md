@@ -12,7 +12,7 @@ Very basic Server Client relationship right now allows clients to connect (note 
 and logout. Current bcrypt is used client side but will eventually be a server side thing as well
 
 Next release items (don't expect these to always be so detailed) <br><br>
-Password challening - In my computer security course we covered SOOOOO many ways for vulnerability when it comes to handling passwords.
+Password challenging - In my computer security course we covered SOOOOO many ways for vulnerability when it comes to handling passwords.
 One big issue was replay attacks. Hashing is great but since it's one way a client will always end up sending the same hash as their
 password. One way to overcome this is to challenege the client. Essentially the client hashes like normally but is given SOMETHING
 which they then hash with their hashed password. In my case it will likely be a salt. So server sends a salt so both client server now it.
