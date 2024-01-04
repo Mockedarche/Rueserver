@@ -152,12 +152,17 @@ finally:
    
    
 """
-             
+
+def sensor(username, sensor_type, data, client_socket):
+    print(data)
+
+    return "Success"
+
 # Pseudo server to handle client connections
 def run_server():
     # set up our listening connections
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 9999))
+    server_socket.bind(('server IP', 9999))
     server_socket.listen(5)
     print("Server listening for incoming connections...")
 
@@ -190,21 +195,32 @@ def run_server():
                 username = message[1]
                 response = authenticate_login(username, client_socket, client_address)
                 client_socket.sendall(response.encode('ascii'))
+
             # Add more conditions for other commands
             elif command == "create_account":
                 username = message[1]
                 response = create_user(username, client_socket)
                 client_socket.sendall(response.encode('ascii'))
+
             # checks if the given user is currently logged in
             elif command == "am_authenticated":
                 username = message[1]
                 response = is_user_authenticated(username, client_address)
                 client_socket.sendall(response.encode('ascii'))
+
             # logout the given user if their logged in AND their ip address is the same as their logged in under
             elif command == "logout":
                 username = message[1]
                 response = logout_user(username, client_address)
                 client_socket.sendall(response.encode('ascii'))
+
+            # sensor allows unauthenticated connection to supply data
+            elif command == "sensor":
+                username = message[1]
+                sensor_type = message[2]
+                response = sensor(username, sensor_type, message[3:], client_socket)
+                client_socket.sendall(response.encode('ascii'))
+
             # if a invalid command was sent print out what command was sent and the clients IP (for future debugging)
             else:
                 print(command)

@@ -10,9 +10,9 @@ import socket
 import bcrypt
 
 # send_string_to_server - simply takes a message and sends it to the server
-def send_string_to_server(message):
+def send_string_to_server(message, ip, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 9999)
+    server_address = (ip, port)
 
     try:
         client_socket.connect(server_address)
@@ -33,9 +33,9 @@ def send_string_to_server(message):
 
 # create_account - taking the username and password get the user unique salt and hash password
 # then send the hashed password to the server and have the account be created
-def create_account(username, password):
+def create_account(username, password, ip, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 9999)
+    server_address = (ip, port)
 
     try:
         # connect to the server
@@ -74,9 +74,9 @@ def create_account(username, password):
        
 # authenticate_user - takes username and password then it gets the usersalt from the server and hashes the password
 # sends the has and logins the user 
-def authenticate_user(username, password):
+def authenticate_user(username, password, ip, port):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', 9999)
+    server_address = (ip, port)
 
     try:
         # connect to the server
@@ -115,23 +115,26 @@ def authenticate_user(username, password):
         print("Connection to the server was refused")
     finally:
         client_socket.close()
-    
 
 # driver that takes input messages and passes them along to the server (handling commands as needed)
 if __name__ == "__main__":
+    ip = input("Enter IP address: ")
+    port = int(input("Enter port: "))
+
     while True:
-            message = input("Please enter what you want to send: ")
-            command, *args = message.split()  # Split the command and arguments
-            # if create account or authenticate commands correctly parse input and password
-            if command == "create_account":
-                username = args[0]
-                password = args[1]
-                create_account(username, password)
-            
-            elif command == "authenticate":
-                username = args[0]
-                password = args[1]
-                authenticate_user(username, password)
-            else:
-                send_string_to_server(message)
+        message = input("Please enter what you want to send: ")
+        command, *args = message.split()  # Split the command and arguments
+        # if create account or authenticate commands correctly parse input and password
+        if command == "create_account":
+            username = args[0]
+            password = args[1]
+            create_account(username, password, ip, port)
+        
+        elif command == "authenticate":
+            username = args[0]
+            password = args[1]
+            authenticate_user(username, password, ip, port)
+
+        else:
+            send_string_to_server(message, ip, port)
             
