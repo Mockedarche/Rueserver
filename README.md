@@ -7,21 +7,5 @@ Goals -
     Currently the thinking will be pi zero w's with temperature, humidity, etc data submitting their data so I can see
     fluctuations throughout my house. Eventually i'd like to make my own humidifiers, zone cooling, etc.
     
-Pre-Alpha v002
-Very basic Server Client relationship right now allows clients to connect (note everything is local host right now), authenticate, create account, check if logged in,
-and logout. Bcrypt is used for all password stuff. Salts are used and tied to the user. Note in the future will want to add some encryption for the messages but still pre-alpha.
-Added some basic bounds checking still going to iron out everything so regardless of how or when a client sends stuff the server stays going and handles that invalid behavior.
-
-
-Next release items (don't expect these to always be so detailed) <br><br>
-Password challenging - In my computer security course we covered SOOOOO many ways for vulnerability when it comes to handling passwords.
-One big issue was replay attacks. Hashing is great but since it's one way a client will always end up sending the same hash as their
-password. One way to overcome this is to challenege the client. Essentially the client hashes like normally but is given SOMETHING
-which they then hash with their hashed password. In my case it will likely be a salt. So server sends a salt so both client server now it.
-Then both will hash the hashed password with that salt giving a unique hash that is sent everytime and one only the real user could know.
-<br><br>
-Auto logout - After x period of inactivity a client should be logged out. This will ensure after months of running my authenticated_users list
-doesn't get too long. Additionally it works as a privacy measure. 
-<br><br>
 
 Working on client side stuff going to get it working on a pi zero w and get sensor gathering done.
