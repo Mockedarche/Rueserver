@@ -7,9 +7,11 @@ Goals -
     Currently the thinking will be pi zero w's with temperature, humidity, etc data submitting their data so I can see
     fluctuations throughout my house. Eventually i'd like to make my own humidifiers, zone cooling, etc.
     
-Pre-Alpha v001
+Pre-Alpha v002
 Very basic Server Client relationship right now allows clients to connect (note everything is local host right now), authenticate, create account, check if logged in,
-and logout. Current bcrypt is used client side but will eventually be a server side thing as well
+and logout. Bcrypt is used for all password stuff. Salts are used and tied to the user. Note in the future will want to add some encryption for the messages but still pre-alpha.
+Added some basic bounds checking still going to iron out everything so regardless of how or when a client sends stuff the server stays going and handles that invalid behavior.
+
 
 Next release items (don't expect these to always be so detailed) <br><br>
 Password challenging - In my computer security course we covered SOOOOO many ways for vulnerability when it comes to handling passwords.
@@ -21,5 +23,5 @@ Then both will hash the hashed password with that salt giving a unique hash that
 Auto logout - After x period of inactivity a client should be logged out. This will ensure after months of running my authenticated_users list
 doesn't get too long. Additionally it works as a privacy measure. 
 <br><br>
-Tie authenticated users to a IP address - This will prevent a obvious flaw right now of bad actors posing as other clients. 
-Another way could be to have a public key and private key relationship such that no bad actor could act like a real client.
+
+Working on client side stuff going to get it working on a pi zero w and get sensor gathering done.
